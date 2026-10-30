@@ -1,0 +1,13 @@
+# Tests run against H2 in PostgreSQL compatibility mode; no Docker or external database needed.
+spring:
+  datasource:
+    url: jdbc:h2:mem:ledger;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000
+    username: sa
+    password: ""
+    hikari:
+      maximum-pool-size: 16
+
+ledger:
+  retry:
+    # The concurrency tests deliberately hammer a handful of accounts.
+    max-attempts: 50

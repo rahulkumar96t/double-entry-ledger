@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and test (H2)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      # verify = compile, Spotless format check, unit + API + concurrency tests on H2 (PostgreSQL mode)
+      - run: ./mvnw -B verify
+
+  postgres:
+    name: Integration tests on PostgreSQL 16
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: ledger
+          POSTGRES_USER: ledger
+          POSTGRES_PASSWORD: ledger
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ledger -d ledger"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      LEDGER_IT_JDBC_URL: jdbc:postgresql://localhost:5432/ledger
+      LEDGER_IT_JDBC_USER: ledger
+      LEDGER_IT_JDBC_PASSWORD: ledger
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      # Same suite, with the datasource pointed at the service container.
+      - run: ./mvnw -B verify

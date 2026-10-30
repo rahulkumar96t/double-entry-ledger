@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: double-entry-ledger
+  datasource:
+    url: ${LEDGER_DB_URL:jdbc:postgresql://localhost:5432/ledger}
+    username: ${LEDGER_DB_USER:ledger}
+    password: ${LEDGER_DB_PASSWORD:ledger}
+    hikari:
+      maximum-pool-size: ${LEDGER_DB_POOL_SIZE:10}
+  flyway:
+    locations: classpath:db/migration
+  jackson:
+    # Money is integer minor units: reject 12.5, "1250" and unknown fields instead of guessing.
+    deserialization:
+      accept-float-as-int: false
+      fail-on-unknown-properties: true
+      fail-on-null-for-primitives: false
+    mapper:
+      allow-coercion-of-scalars: false
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: ${PORT:8080}
+
+ledger:
+  retry:
+    max-attempts: 10
+    initial-backoff: 2ms
+    max-backoff: 50ms
+  idempotency:
+    in-flight-wait: 2s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
